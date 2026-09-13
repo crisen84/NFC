@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#141C24">
+<title>Buscador de etiquetas NFC</title>
+<style>
+  :root{
+    --fondo:#141C24;
+    --panel:#1D2833;
+    --linea:#2C3A47;
+    --texto:#EEF2F5;
+    --tenue:#8FA0AF;
+    --senal:#F2B441;
+    --si:#00A870;
+    --no:#374653;
+    --alerta:#D9603C;
+    --radio:14px;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+
+  body{
+    background:var(--fondo);
+    color:var(--texto);
+    font-family:"Segoe UI",Roboto,system-ui,-apple-system,sans-serif;
+    font-size:16px;
+    line-height:1.45;
+    display:flex;
+    flex-direction:column;
+    overscroll-behavior:none;
+    -webkit-text-size-adjust:100%;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  .mono{font-family:"Roboto Mono",ui-monospace,Menlo,Consolas,monospace;letter-spacing:.04em}
+
+  /* ---------- Encabezado ---------- */
+  header{
+    padding:14px 18px 12px;
+    border-bottom:1px solid var(--linea);
+    flex:none;
+  }
+  header h1{font-size:1.05rem;font-weight:600;letter-spacing:-.01em}
+  #objetivoChip{margin-top:6px;font-size:.9rem;color:var(--tenue)}
+  #objetivoChip b{color:var(--senal);font-weight:600}
+
+  /* ---------- Zona de estado ---------- */
+  #escenario{
+    flex:1 1 auto;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:26px 18px;
+    background:var(--fondo);
+    transition:background-color .12s linear;
+    min-height:44vh;
+  }
+  #escenario.acierto{background:var(--si)}
+  #escenario.fallo{background:var(--no)}
+  #escenario.problema{background:var(--alerta)}
+
+  #veredicto{
+    font-size:clamp(2.4rem,13vw,4rem);
+    font-weight:700;
+    letter-spacing:-.03em;
+    line-height:1.05;
+  }
+  #detalle{margin-top:10px;font-size:1rem;color:var(--tenue);max-width:34ch}
+  .acierto #detalle,.fallo #detalle,.problema #detalle{color:rgba(255,255,255,.88)}
+
+  #lectura{
+    margin-top:22px;
+    font-size:clamp(1.1rem,6vw,1.7rem);
+    font-weight:600;
+    word-break:break-all;
+    max-width:100%;
+  }
+  #textoTag{
+    margin-top:8px;
+    font-size:.95rem;
+    color:var(--tenue);
+    max-width:34ch;
+    word-break:break-word;
+  }
+  .acierto #textoTag,.fallo #textoTag{color:rgba(255,255,255,.85)}
+
+  /* En el acierto la matrícula es el dato protagonista */
+  .acierto #textoTag{
+    margin-top:16px;
+    font-size:clamp(1.9rem,11vw,3.2rem);
+    font-weight:800;
+    letter-spacing:-.02em;
+    line-height:1.08;
+    color:#fff;
+    max-width:100%;
+  }
+
+  #btnUsarLeida{
+    margin-top:20px;
+    border:1px solid rgba(255,255,255,.5);
+    color:var(--texto);
+    background:rgba(255,255,255,.06);
+    border-radius:var(--radio);
+    padding:13px 20px;
+    font:inherit;
+    font-weight:600;
+  }
+  #btnUsarLeida[hidden]{display:none}
+
+  #pulso{
+    width:min(280px,70vw);height:3px;margin-top:20px;border-radius:2px;
+    background:var(--linea);overflow:hidden;opacity:0;
+  }
+  #escenario.buscando #pulso{opacity:1}
+  #pulso i{
+    display:block;width:40%;height:100%;border-radius:2px;
+    background:var(--senal);animation:barrido 1.1s ease-in-out infinite;
+  }
+  @keyframes barrido{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
+
+  #contador{margin-top:26px;font-size:.88rem;color:var(--tenue)}
+  .acierto #contador,.fallo #contador{color:rgba(255,255,255,.75)}
+
+  /* ---------- Controles ---------- */
+  .controles{
+    flex:none;
+    border-top:1px solid var(--linea);
+    background:var(--panel);
+    padding:14px 16px calc(18px + env(safe-area-inset-bottom));
+  }
+  .fila{display:flex;gap:10px;margin-bottom:10px}
+  .fila:last-child{margin-bottom:0}
+
+  button{
+    font:inherit;color:var(--texto);background:transparent;
+    border:1px solid var(--linea);border-radius:var(--radio);
+    padding:13px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  }
+  button:focus-visible{outline:2px solid var(--senal);outline-offset:2px}
+
+  .principal{
+    flex:1;background:var(--senal);border-color:var(--senal);color:#22190A;
+    font-weight:650;font-size:1.05rem;padding:16px;
+  }
+  .principal.activo{background:transparent;color:var(--senal)}
+  .secundaria{flex:1;font-size:.95rem}
+
+  input[type=text],textarea{
+    flex:1;font:inherit;color:var(--texto);background:var(--fondo);
+    border:1px solid var(--linea);border-radius:var(--radio);
+    padding:13px 14px;min-width:0;width:100%;
+  }
+  input[type=text]{
+    font-family:"Roboto Mono",ui-monospace,Menlo,Consolas,monospace;
+    letter-spacing:.04em;
+  }
+  input[type=text]::placeholder{color:#5C6C7A;letter-spacing:normal;font-family:inherit}
+  input[type=text]:focus,textarea:focus{outline:none;border-color:var(--senal)}
+  textarea{min-height:110px;resize:vertical;line-height:1.5}
+
+  .modos{display:flex;gap:8px;margin-bottom:12px}
+  .modo{flex:1;font-size:.82rem;padding:9px 6px;border-radius:10px;color:var(--tenue);line-height:1.25}
+  .modo[aria-pressed="true"]{color:var(--texto);border-color:var(--senal);background:rgba(242,180,65,.12)}
+
+  .etiqueta{font-size:.82rem;color:var(--tenue);margin-bottom:7px}
+
+  details{border-top:1px solid var(--linea);margin-top:14px;padding-top:10px}
+  summary{
+    font-size:.88rem;color:var(--tenue);cursor:pointer;
+    list-style:none;padding:4px 0;
+  }
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"\25B8 ";color:var(--senal)}
+  details[open] summary::before{content:"\25BE "}
+  details > *:not(summary){margin-top:10px}
+
+  #historial{max-height:30vh;overflow-y:auto}
+  #historial li{
+    list-style:none;display:flex;align-items:baseline;gap:10px;
+    padding:8px 0;border-bottom:1px solid var(--linea);font-size:.9rem;
+  }
+  #historial li:last-child{border-bottom:none}
+  #historial .uid{flex:1;word-break:break-all}
+  #historial .marca{flex:none;color:var(--tenue);font-size:.8rem}
+  #historial li.esta .uid{color:var(--si);font-weight:600}
+  #historial li.esta .marca{color:var(--si)}
+  #vacio{color:var(--tenue);font-size:.88rem}
+
+  #urls{max-height:34vh;overflow-y:auto}
+  #urls li{
+    list-style:none;display:flex;align-items:center;gap:10px;
+    padding:9px 0;border-bottom:1px solid var(--linea);
+  }
+  #urls li:last-child{border-bottom:none}
+  #urls .dir{
+    flex:1;font-size:.76rem;color:var(--tenue);word-break:break-all;
+    font-family:"Roboto Mono",ui-monospace,monospace;
+  }
+  #urls button{flex:none;padding:8px 12px;font-size:.8rem;border-radius:10px}
+
+  /* ---------- Aviso ---------- */
+  #aviso{flex:none;padding:14px 18px;font-size:.92rem;display:none}
+  #aviso.visible{display:block}
+  #aviso.grave{background:var(--alerta);color:#fff}
+  #aviso.info{background:#25313D;color:var(--texto);border-bottom:1px solid var(--linea)}
+  #aviso code{
+    font-family:"Roboto Mono",ui-monospace,monospace;
+    background:rgba(0,0,0,.25);padding:1px 5px;border-radius:4px;
+  }
+  #aviso b{color:var(--senal)}
+  #aviso.grave b{color:#fff}
+
+  @media (prefers-reduced-motion:reduce){
+    #pulso i{animation:none;width:100%}
+    #escenario{transition:none}
+  }
+</style>
+</head>
+<body>
+
+<div id="aviso" role="status"></div>
+
+<header>
+  <h1>Buscador de etiquetas NFC</h1>
+  <p id="objetivoChip">Sin objetivo definido</p>
+</header>
+
+<main id="escenario" class="reposo" aria-live="polite">
+  <p id="veredicto">Listo</p>
+  <p id="detalle">Define qué etiqueta buscas y empieza a escanear.</p>
+  <p id="lectura" class="mono"></p>
+  <p id="textoTag"></p>
+  <button id="btnUsarLeida" hidden>Buscar esta matrícula</button>
+  <div id="pulso"><i></i></div>
+  <p id="contador"></p>
+</main>
+
+<section class="controles">
+  <p class="etiqueta">Coincide cuando&hellip;</p>
+  <div class="modos" role="group" aria-label="Criterio de coincidencia">
+    <button class="modo" data-modo="texto" aria-pressed="true">MATR&Iacute;CULA</button>
+    <button class="modo" data-modo="uid" aria-pressed="false">No. de Serie de Etiqueta</button>
+  </div>
+
+  <p class="etiqueta" id="etiquetaObjetivo">Matr&iacute;cula que buscas</p>
+  <div class="fila">
+    <input type="text" id="objetivo" placeholder=""
+           autocomplete="off" autocapitalize="characters" spellcheck="false"
+           aria-labelledby="etiquetaObjetivo">
+  </div>
+
+  <div class="fila">
+    <button class="principal" id="btnEscanear">Iniciar escaneo</button>
+  </div>
+
+  <div class="fila">
+    <button class="secundaria" id="btnLimpiar">Borrar historial</button>
+  </div>
+
+  <details>
+    <summary>Etiquetas le&iacute;das <span id="resumenLista"></span></summary>
+    <ul id="historial"></ul>
+    <p id="vacio">Todav&iacute;a no has le&iacute;do ninguna etiqueta.</p>
+  </details>
+
+  <details>
+    <summary>Generar URLs para grabar en las etiquetas</summary>
+    <p class="etiqueta">Matr&iacute;culas, una por l&iacute;nea</p>
+    <textarea id="matriculas" spellcheck="false" autocapitalize="characters"
+              placeholder="99887766&#10;12345678&#10;45120033"></textarea>
+    <div class="fila">
+      <button class="secundaria" id="btnGenerar">Generar</button>
+      <button class="secundaria" id="btnCopiarTodo">Copiar todas</button>
+    </div>
+    <ul id="urls"></ul>
+  </details>
+</section>
+
+<script>
+(() => {
+  "use strict";
+
+  const $ = id => document.getElementById(id);
+  const escenario = $("escenario"), veredicto = $("veredicto"), detalle = $("detalle"),
+        lectura = $("lectura"), textoTag = $("textoTag"), contador = $("contador"),
+        objetivo = $("objetivo"), objetivoChip = $("objetivoChip"),
+        btnEscanear = $("btnEscanear"), btnLimpiar = $("btnLimpiar"),
+        btnUsarLeida = $("btnUsarLeida"), historial = $("historial"),
+        vacio = $("vacio"), resumenLista = $("resumenLista"), aviso = $("aviso"),
+        matriculas = $("matriculas"), listaUrls = $("urls"),
+        btnGenerar = $("btnGenerar"), btnCopiarTodo = $("btnCopiarTodo");
+
+  let modo = "texto";
+  let escaneando = false;
+  let control = null;
+  let audio = null;
+  let wakeLock = null;
+  let restaurar = null;
+  let leidaEnURL = null;
+  let vistas = new Map();   // clave -> {uid, texto, esta, hora}
+
+  /* ---------- Almacenamiento con respaldo en memoria ---------- */
+
+  const memoria = {};
+  const almacen = {
+    leer(k){
+      try { const v = localStorage.getItem(k); return v === null ? (k in memoria ? memoria[k] : null) : v; }
+      catch(e){ return k in memoria ? memoria[k] : null; }
+    },
+    guardar(k,v){
+      memoria[k] = v;
+      try { localStorage.setItem(k,v); } catch(e){}
+    },
+    borrar(k){
+      delete memoria[k];
+      try { localStorage.removeItem(k); } catch(e){}
+    }
+  };
+
+  const K_OBJ = "nfc.objetivo", K_MODO = "nfc.modo", K_VISTAS = "nfc.vistas";
+
+  /* ---------- Utilidades ---------- */
+
+  const normaliza = s => (s || "").toUpperCase().replace(/[^0-9A-F]/g, "");
+
+  const bonito = s => {
+    const n = normaliza(s);
+    return n ? (n.match(/.{1,2}/g) || []).join(":") : "";
+  };
+
+  const limpio = s => (s || "").replace(/[<>&"']/g, "");
+
+  function pinta(clase, titulo, sub, uid, texto){
+    escenario.className = clase;
+    veredicto.textContent = titulo;
+    detalle.textContent = sub || "";
+    lectura.textContent = uid ? bonito(uid) : "";
+    textoTag.textContent = texto || "";
+  }
+
+  function vibra(patron){
+    try { navigator.vibrate && navigator.vibrate(patron); } catch(e){}
+  }
+
+  function pita(frecuencia, duracion){
+    if (!audio) return;
+    try {
+      const osc = audio.createOscillator(), vol = audio.createGain();
+      osc.type = "sine";
+      osc.frequency.value = frecuencia;
+      vol.gain.setValueAtTime(0.0001, audio.currentTime);
+      vol.gain.exponentialRampToValueAtTime(0.25, audio.currentTime + 0.01);
+      vol.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + duracion);
+      osc.connect(vol).connect(audio.destination);
+      osc.start();
+      osc.stop(audio.currentTime + duracion + 0.02);
+    } catch(e){}
+  }
+
+  function despiertaAudio(){
+    try {
+      if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+      if (audio.state === "suspended") audio.resume();
+    } catch(e){ audio = null; }
+  }
+
+  async function mantenPantalla(encender){
+    try {
+      if (encender && "wakeLock" in navigator && !wakeLock){
+        wakeLock = await navigator.wakeLock.request("screen");
+        wakeLock.addEventListener("release", () => { wakeLock = null; });
+      } else if (!encender && wakeLock){
+        await wakeLock.release();
+        wakeLock = null;
+      }
+    } catch(e){}
+  }
+
+  /* ---------- Capacidades del dispositivo ---------- */
+
+  const hayWebNFC = window.isSecureContext && ("NDEFReader" in window);
+
+  function avisaCapacidad(){
+    if (hayWebNFC) return;
+
+    if (!window.isSecureContext){
+      aviso.className = "visible grave";
+      aviso.innerHTML = "Esta p&aacute;gina necesita abrirse por <code>https://</code>. " +
+                        "Abierta como archivo (<code>file://</code>) el navegador bloquea el NFC.";
+    } else {
+      aviso.className = "visible info";
+      aviso.innerHTML = "<b>Modo iPhone.</b> Este navegador no puede barrer etiquetas por s&iacute; solo. " +
+                        "Acerca el tel&eacute;fono desbloqueado a cada etiqueta y toca la notificaci&oacute;n que aparece: " +
+                        "esta p&aacute;gina se abre sola y te dice si es la que buscas.";
+    }
+    btnEscanear.disabled = true;
+    btnEscanear.style.opacity = ".4";
+    btnEscanear.textContent = "Escaneo continuo no disponible";
+  }
+
+  /* ---------- Objetivo ---------- */
+
+  function actualizaChip(){
+    const v = objetivo.value.trim();
+    if (!v){
+      objetivoChip.textContent = "Sin objetivo definido";
+      return;
+    }
+    objetivoChip.innerHTML = (modo === "texto" ? "Buscando la matr&iacute;cula " : "Buscando ") +
+                             "<b>" + limpio(v) + "</b>";
+  }
+
+  function aplicaModo(){
+    document.querySelectorAll(".modo").forEach(o =>
+      o.setAttribute("aria-pressed", String(o.dataset.modo === modo)));
+    objetivo.placeholder = modo === "texto" ? "" : "04:1A:2B:3C:4D:5E:6F";
+    $("etiquetaObjetivo").textContent = modo === "texto"
+      ? "Matr\u00EDcula que buscas"
+      : "No. de serie que buscas";
+    actualizaChip();
+  }
+
+  objetivo.addEventListener("input", () => {
+    if (modo !== "texto"){
+      const alFinal = objetivo.selectionStart === objetivo.value.length;
+      const fmt = bonito(objetivo.value);
+      if (fmt !== objetivo.value && alFinal) objetivo.value = fmt;
+    }
+    almacen.guardar(K_OBJ, objetivo.value);
+    actualizaChip();
+    reevalua();
+  });
+
+  document.querySelectorAll(".modo").forEach(b => {
+    b.addEventListener("click", () => {
+      modo = b.dataset.modo;
+      almacen.guardar(K_MODO, modo);
+      aplicaModo();
+      reevalua();
+    });
+  });
+
+  /* ---------- Comparación ---------- */
+
+  function coincide(uid, texto){
+    const meta = objetivo.value.trim();
+    if (!meta) return false;
+
+    if (modo === "texto"){
+      return (texto || "").toLowerCase().includes(meta.toLowerCase());
+    }
+    const a = normaliza(uid), b = normaliza(meta);
+    if (!a || !b) return false;
+    return a === b;
+  }
+
+  function reevalua(){
+    vistas.forEach(v => { v.esta = coincide(v.uid, v.texto); });
+    guardaVistas();
+    dibujaHistorial();
+  }
+
+  /* ---------- Historial persistente ---------- */
+
+  function cargaVistas(){
+    try {
+      const crudo = almacen.leer(K_VISTAS);
+      if (!crudo) return;
+      const arr = JSON.parse(crudo);
+      if (Array.isArray(arr)) arr.forEach(v => { if (v && v.clave) vistas.set(v.clave, v); });
+    } catch(e){}
+  }
+
+  function guardaVistas(){
+    try {
+      const arr = [...vistas.entries()].slice(-200).map(([clave, v]) => ({
+        clave, uid: v.uid, texto: v.texto, esta: v.esta, hora: v.hora
+      }));
+      almacen.guardar(K_VISTAS, JSON.stringify(arr));
+    } catch(e){}
+  }
+
+  function dibujaHistorial(){
+    historial.innerHTML = "";
+    const lista = [...vistas.values()].reverse();
+    vacio.style.display = lista.length ? "none" : "block";
+    resumenLista.textContent = lista.length ? "(" + lista.length + ")" : "";
+
+    lista.forEach(v => {
+      const li = document.createElement("li");
+      if (v.esta) li.className = "esta";
+      const dato = document.createElement("span");
+      dato.className = "uid" + (v.texto ? "" : " mono");
+      dato.textContent = v.texto ? v.texto : bonito(v.uid);
+      const marca = document.createElement("span");
+      marca.className = "marca";
+      marca.textContent = v.esta ? "es esta" : v.hora;
+      li.append(dato, marca);
+      historial.appendChild(li);
+    });
+
+    const hallada = lista.some(v => v.esta);
+    contador.textContent = lista.length
+      ? lista.length + (lista.length === 1 ? " etiqueta revisada" : " etiquetas revisadas") +
+        (hallada ? " \u00B7 ya apareci\u00F3 la que buscas" : "")
+      : "";
+  }
+
+  btnLimpiar.addEventListener("click", () => {
+    vistas = new Map();
+    almacen.borrar(K_VISTAS);
+    dibujaHistorial();
+    if (escaneando) pinta("buscando", "Escaneando", "Acerca la antena del tel\u00E9fono a cada etiqueta.");
+  });
+
+  /* ---------- Registro de una lectura ---------- */
+
+  function registra(uid, texto){
+    const clave = uid || ("txt:" + texto);
+    const esta = coincide(uid, texto);
+    const hora = new Date().toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
+    vistas.delete(clave);
+    vistas.set(clave, { uid, texto, esta, hora });
+    guardaVistas();
+    dibujaHistorial();
+    return esta;
+  }
+
+  function celebra(uid, texto){
+    vibra([140, 70, 140, 70, 320]);
+    pita(880, 0.14);
+    setTimeout(() => pita(1320, 0.26), 150);
+    if (escaneando) detiene(true);
+    pinta("acierto", "Es esta", "Escaneo detenido. No hace falta seguir buscando.", uid, texto);
+  }
+
+  function descarta(uid, texto){
+    vibra(35);
+    pita(320, 0.06);
+    pinta("fallo", "No es",
+          objetivo.value.trim() ? "Sigue con la siguiente." : "A\u00FAn no has definido qu\u00E9 etiqueta buscas.",
+          uid, texto);
+  }
+
+  /* ---------- Vía A: matrícula en la URL (iPhone y Android) ---------- */
+
+  function procesaURL(){
+    const params = new URLSearchParams(location.search);
+    const m = params.get("m");
+    if (m === null) return false;
+
+    leidaEnURL = m.trim();
+    if (!leidaEnURL) return false;
+
+    modo = "texto";                 // la URL solo trae matrícula
+    almacen.guardar(K_MODO, modo);
+    aplicaModo();
+
+    const esta = registra("", leidaEnURL);
+    const hayObjetivo = objetivo.value.trim().length > 0;
+
+    despiertaAudio();
+
+    if (!hayObjetivo){
+      pinta("reposo", "Etiqueta le\u00EDda", "No tienes objetivo definido todav\u00EDa.", "", leidaEnURL);
+      textoTag.style.fontSize = "clamp(1.6rem,9vw,2.6rem)";
+      textoTag.style.fontWeight = "700";
+      textoTag.style.color = "var(--texto)";
+    } else if (esta){
+      celebra("", leidaEnURL);
+    } else {
+      descarta("", leidaEnURL);
+    }
+
+    btnUsarLeida.hidden = false;
+    btnUsarLeida.textContent = hayObjetivo ? "Buscar esta matr\u00EDcula" : "Buscar esta matr\u00EDcula";
+    return true;
+  }
+
+  btnUsarLeida.addEventListener("click", () => {
+    if (!leidaEnURL) return;
+    objetivo.value = leidaEnURL;
+    almacen.guardar(K_OBJ, objetivo.value);
+    aplicaModo();
+    reevalua();
+    btnUsarLeida.hidden = true;
+    textoTag.style.cssText = "";
+    vibra(60);
+    pita(740, 0.09);
+    pinta("reposo", "Objetivo fijado",
+          "Ahora ve pasando el tel\u00E9fono por las dem\u00E1s etiquetas.", "", leidaEnURL);
+  });
+
+  /* ---------- Vía B: barrido continuo con Web NFC (Android) ---------- */
+
+  function extraeTexto(mensaje){
+    if (!mensaje || !mensaje.records) return "";
+    const partes = [];
+    for (const r of mensaje.records){
+      try {
+        if (r.recordType === "text"){
+          partes.push(new TextDecoder(r.encoding || "utf-8").decode(r.data));
+        } else if (r.recordType === "url" || r.recordType === "absolute-url"){
+          const u = new TextDecoder().decode(r.data);
+          const mm = u.match(/[?&]m=([^&#]+)/);
+          partes.push(mm ? decodeURIComponent(mm[1]) : u);
+        }
+      } catch(e){}
+    }
+    return partes.join(" \u00B7 ");
+  }
+
+  function alLeer({ serialNumber, message }){
+    const uid = normaliza(serialNumber);
+    const texto = extraeTexto(message);
+    clearTimeout(restaurar);
+    btnUsarLeida.hidden = true;
+
+    if (!uid && !texto){
+      pinta("problema", "Lectura vac\u00EDa",
+            "La etiqueta respondi\u00F3 pero no devolvi\u00F3 datos. Vuelve a pasarla m\u00E1s despacio.");
+      vibra([40, 60, 40]);
+      volverABuscar(2200);
+      return;
+    }
+
+    if (registra(uid, texto)){
+      celebra(uid, texto);
+    } else {
+      descarta(uid, texto);
+      volverABuscar(2500);
+    }
+  }
+
+  function volverABuscar(ms){
+    restaurar = setTimeout(() => {
+      if (escaneando) pinta("buscando", "Escaneando", "Acerca la antena del tel\u00E9fono a cada etiqueta.");
+    }, ms);
+  }
+
+  function alFallar(){
+    pinta("problema", "No se pudo leer", "Mant\u00E9n el tel\u00E9fono pegado a la etiqueta un segundo m\u00E1s.");
+    vibra([40, 60, 40]);
+    volverABuscar(2200);
+  }
+
+  async function arranca(){
+    if (escaneando) return true;
+    despiertaAudio();
+    try {
+      control = new AbortController();
+      const lector = new NDEFReader();
+      await lector.scan({ signal: control.signal });
+      lector.onreading = alLeer;
+      lector.onreadingerror = alFallar;
+      escaneando = true;
+      btnEscanear.textContent = "Detener escaneo";
+      btnEscanear.classList.add("activo");
+      btnUsarLeida.hidden = true;
+      textoTag.style.cssText = "";
+      mantenPantalla(true);
+      pinta("buscando", "Escaneando", "Acerca la antena del tel\u00E9fono a cada etiqueta.");
+      return true;
+    } catch(e){
+      escaneando = false;
+      control = null;
+      const n = e && e.name;
+      if (n === "NotAllowedError"){
+        pinta("problema", "Permiso denegado",
+              "Acepta el permiso de NFC cuando el navegador lo pida. Si ya lo rechazaste, rest\u00E1uralo en los ajustes del sitio.");
+      } else if (n === "NotSupportedError" || n === "NotReadableError"){
+        pinta("problema", "NFC apagado", "Enciende el NFC en los ajustes del tel\u00E9fono y vuelve a intentarlo.");
+      } else {
+        pinta("problema", "No se pudo iniciar", (e && e.message) || "Error desconocido al abrir el lector NFC.");
+      }
+      return false;
+    }
+  }
+
+  function detiene(porHallazgo){
+    if (control){ try { control.abort(); } catch(e){} }
+    control = null;
+    escaneando = false;
+    clearTimeout(restaurar);
+    btnEscanear.textContent = porHallazgo ? "Reanudar escaneo" : "Iniciar escaneo";
+    btnEscanear.classList.remove("activo");
+    mantenPantalla(false);
+    if (!porHallazgo){
+      pinta("reposo", "Detenido", "El escaneo est\u00E1 apagado.");
+    }
+  }
+
+  btnEscanear.addEventListener("click", () => {
+    escaneando ? detiene() : arranca();
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && escaneando && !wakeLock) mantenPantalla(true);
+  });
+
+  /* ---------- Generador de URLs para grabar ---------- */
+
+  const base = location.origin + location.pathname;
+
+  function generaUrls(){
+    const filas = matriculas.value.split(/[\r\n,;]+/).map(s => s.trim()).filter(Boolean);
+    listaUrls.innerHTML = "";
+    if (!filas.length){
+      const li = document.createElement("li");
+      li.innerHTML = '<span class="dir">Escribe al menos una matr&iacute;cula arriba.</span>';
+      listaUrls.appendChild(li);
+      return;
+    }
+    filas.forEach(m => {
+      const url = base + "?m=" + encodeURIComponent(m);
+      const li = document.createElement("li");
+      const dir = document.createElement("span");
+      dir.className = "dir";
+      dir.textContent = url;
+      const b = document.createElement("button");
+      b.textContent = "Copiar";
+      b.addEventListener("click", async () => {
+        const ok = await copia(url);
+        b.textContent = ok ? "Copiada" : "Falló";
+        setTimeout(() => { b.textContent = "Copiar"; }, 1400);
+      });
+      li.append(dir, b);
+      listaUrls.appendChild(li);
+    });
+  }
+
+  async function copia(t){
+    try { await navigator.clipboard.writeText(t); return true; }
+    catch(e){
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = t;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+        return ok;
+      } catch(e2){ return false; }
+    }
+  }
+
+  btnGenerar.addEventListener("click", generaUrls);
+
+  btnCopiarTodo.addEventListener("click", async () => {
+    const filas = matriculas.value.split(/[\r\n,;]+/).map(s => s.trim()).filter(Boolean);
+    if (!filas.length) return;
+    const todo = filas.map(m => base + "?m=" + encodeURIComponent(m)).join("\n");
+    const ok = await copia(todo);
+    btnCopiarTodo.textContent = ok ? "Copiadas" : "Falló";
+    setTimeout(() => { btnCopiarTodo.textContent = "Copiar todas"; }, 1500);
+  });
+
+  /* ---------- Arranque ---------- */
+
+  const modoGuardado = almacen.leer(K_MODO);
+  if (modoGuardado === "uid" || modoGuardado === "texto") modo = modoGuardado;
+
+  const objGuardado = almacen.leer(K_OBJ);
+  if (objGuardado) objetivo.value = objGuardado;
+
+  cargaVistas();
+  aplicaModo();
+  avisaCapacidad();
+
+  const veniaDeEtiqueta = procesaURL();
+  if (!veniaDeEtiqueta) dibujaHistorial();
+})();
+</script>
+</body>
+</html>
