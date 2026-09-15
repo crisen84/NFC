@@ -2,7 +2,7 @@
    Cambia VERSION cuando publiques una actualización: eso obliga a
    descargar de nuevo los archivos y borra la caché anterior. */
 
-const VERSION = "buscar-nfc-v12";
+const VERSION = "buscar-nfc-v13";
 
 const ARCHIVOS = [
   "./",
