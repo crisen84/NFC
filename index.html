@@ -1,0 +1,1546 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#f7f8fb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111418" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="NFC Lectura/Escritura">
+<meta name="color-scheme" content="light dark">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icono-192.png">
+<link rel="apple-touch-icon" href="icono-192.png">
+<title>NFC Lectura/Escritura</title>
+<style>
+  :root{
+    --primary:#2c5ad4;
+    --on-primary:#ffffff;
+    --primary-cont:#dde5ff;
+    --on-primary-cont:#001849;
+    --secondary-cont:#dbe2f9;
+    --on-secondary-cont:#141b2c;
+    --surface:#f7f8fb;
+    --surface-1:#ffffff;
+    --surface-2:#eef0f6;
+    --surface-3:#e5e8f0;
+    --on-surface:#191c20;
+    --on-surface-var:#484c53;
+    --outline:#c3c7d0;
+    --error:#ba1a1a;
+    --on-error:#ffffff;
+    --error-cont:#ffdad6;
+    --on-error-cont:#410002;
+    --ok:#0f6b46;
+    --ok-cont:#ceecdc;
+    --on-ok-cont:#00210f;
+    --tertiary:#7a5900;
+    --tertiary-cont:#ffdf9a;
+    --on-tertiary-cont:#261a00;
+    --inverse:#2e3135;
+    --on-inverse:#f0f0f7;
+    --scrim:rgba(0,0,0,.42);
+    --antena:#2c5ad4;
+    --btn:#2c5ad4;
+    --btn-texto:#ffffff;
+    --btn-rojo:#ba1a1a;
+    --antena-ok:#0f6b46;
+    --antena-err:#b3261e;
+    --antena-icono:#ffffff;
+    --mono: ui-monospace, "Roboto Mono", Menlo, Consolas, monospace;
+    --sans: Roboto, "Segoe UI", system-ui, -apple-system, sans-serif;
+    --sombra-1:0 1px 2px rgba(15,20,35,.10), 0 1px 3px 1px rgba(15,20,35,.05);
+    --sombra-2:0 2px 6px 2px rgba(15,20,35,.10), 0 1px 2px rgba(15,20,35,.12);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --primary:#b0c6ff;
+      --on-primary:#002d76;
+      --primary-cont:#0c4194;
+      --on-primary-cont:#dae2ff;
+      --secondary-cont:#3b4559;
+      --on-secondary-cont:#dbe2f9;
+      --surface:#111418;
+      --surface-1:#191c20;
+      --surface-2:#21242a;
+      --surface-3:#2a2e35;
+      --on-surface:#e2e2e9;
+      --on-surface-var:#b9bdc8;
+      --outline:#8b8f99;
+      --error:#ffb4ab;
+      --on-error:#690005;
+      --error-cont:#93000a;
+      --on-error-cont:#ffffff;
+      --ok:#7cdcac;
+      --ok-cont:#00512f;
+      --on-ok-cont:#ffffff;
+      --tertiary:#f1c04b;
+      --tertiary-cont:#5c4200;
+      --on-tertiary-cont:#ffdf9a;
+      --inverse:#e2e2e9;
+      --on-inverse:#2e3135;
+      --scrim:rgba(0,0,0,.6);
+      --antena:#2c5ad4;
+      --btn:#2c5ad4;
+      --btn-texto:#ffffff;
+      --btn-rojo:#93000a;
+      --antena-ok:#14875a;
+      --antena-err:#c53b30;
+      --antena-icono:#ffffff;
+      --sombra-1:0 1px 3px rgba(0,0,0,.5);
+      --sombra-2:0 3px 8px rgba(0,0,0,.55);
+    }
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{background:var(--surface)}
+  body{
+    margin:0;padding:0;
+    font-family:var(--sans);
+    background:var(--surface);
+    color:var(--on-surface);
+    font-size:16px;line-height:1.45;
+    -webkit-text-size-adjust:100%;
+    overscroll-behavior-y:none;
+    padding-bottom:calc(84px + env(safe-area-inset-bottom,0px));
+  }
+  h1,h2,h3,p,ul,ol{margin:0}
+  button,select,input,textarea{font-family:inherit}
+
+  /* ---------- barra superior ---------- */
+  .barra{
+    position:sticky;top:0;z-index:30;
+    background:var(--surface);
+    padding:0 8px 0 16px;
+    padding-top:env(safe-area-inset-top,0px);
+    height:calc(64px + env(safe-area-inset-top,0px));
+    display:flex;align-items:center;gap:12px;justify-content:space-between;
+    transition:background .2s ease, box-shadow .2s ease;
+    user-select:none;
+  }
+  .barra.elevada{background:var(--surface-2);box-shadow:var(--sombra-1)}
+  .barra h1{font-size:22px;font-weight:500;letter-spacing:0}
+  .pastilla{
+    display:inline-flex;align-items:center;gap:7px;
+    font-size:13px;font-weight:500;height:34px;padding:0 13px;
+    border-radius:10px;border:1px solid var(--outline);
+    color:var(--on-surface-var);background:transparent;white-space:nowrap;
+  }
+  .pastilla::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--on-surface-var)}
+  .pastilla.si{background:var(--ok-cont);color:var(--on-ok-cont);border-color:transparent}
+  .pastilla.si::before{background:var(--ok)}
+  .pastilla.no{background:var(--error-cont);color:var(--on-error-cont);border-color:transparent}
+  .pastilla.no::before{background:var(--error)}
+
+  main{padding:4px 16px 8px;max-width:640px;margin:0 auto}
+  section[hidden]{display:none}
+
+  .aviso{
+    background:var(--error-cont);color:var(--on-error-cont);
+    border-radius:16px;padding:14px 16px;font-size:14px;margin-bottom:12px;
+  }
+  .aviso b{display:block;margin-bottom:3px;font-size:15px}
+
+  /* ---------- tarjeta principal (zona de contacto) ---------- */
+  .zona{
+    background:var(--surface-1);border-radius:28px;
+    padding:26px 18px 22px;text-align:center;margin-bottom:12px;
+    box-shadow:var(--sombra-1);
+  }
+  .antena{
+    width:136px;height:136px;margin:0 auto 16px;position:relative;
+    display:grid;place-items:center;border-radius:50%;
+    background:var(--antena);transition:background .25s ease;
+  }
+  .antena svg{width:62px;height:62px;color:var(--antena-icono);transition:color .25s ease}
+  .antena::after,.antena::before{content:"";position:absolute;inset:-4px;border-radius:50%;border:2px solid var(--primary);opacity:0}
+  .zona[data-estado="esperando"] .antena::after{animation:pulso 1.8s cubic-bezier(.2,.6,.3,1) infinite}
+  .zona[data-estado="esperando"] .antena::before{animation:pulso 1.8s cubic-bezier(.2,.6,.3,1) .9s infinite}
+  .zona[data-estado="ok"] .antena{background:var(--antena-ok)}
+  .zona[data-estado="error"] .antena{background:var(--antena-err)}
+  @keyframes pulso{0%{opacity:.9;transform:scale(.85)}100%{opacity:0;transform:scale(1.25)}}
+  @media (prefers-reduced-motion: reduce){
+    .zona[data-estado="esperando"] .antena::after,
+    .zona[data-estado="esperando"] .antena::before{animation:none;opacity:.4}
+  }
+  .zona p{font-size:15px;color:var(--on-surface-var);margin-bottom:18px;line-height:1.5}
+  .zona p strong{color:var(--on-surface);font-weight:500}
+  .contador{
+    font-size:40px;font-weight:500;font-variant-numeric:tabular-nums;
+    letter-spacing:-.02em;margin-bottom:14px;color:var(--on-surface);
+  }
+  .contador small{display:block;font-size:13px;font-weight:400;color:var(--on-surface-var);letter-spacing:0;margin-top:2px}
+
+  /* ---------- botones ---------- */
+  .btn{
+    position:relative;overflow:hidden;
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    min-height:52px;padding:0 22px;border:0;border-radius:26px;
+    background:var(--btn);color:var(--btn-texto);
+    font-size:15px;font-weight:500;letter-spacing:.01em;cursor:pointer;width:100%;
+    transition:opacity .15s ease, box-shadow .15s ease;user-select:none;
+  }
+  .btn.fantasma{background:transparent;color:var(--primary);box-shadow:inset 0 0 0 1px var(--outline)}
+  .btn.tonal{background:var(--secondary-cont);color:var(--on-secondary-cont)}
+  .btn.alto{background:var(--btn-rojo);color:#ffffff}
+  .btn.bloqueo{background:var(--btn-rojo);color:#ffffff}
+  .btn.chico{min-height:44px;font-size:14px;padding:0 16px;border-radius:22px;width:auto}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn:disabled:not(.fantasma){
+    opacity:1;color:var(--btn-texto);
+    background:var(--btn);
+  }
+  .btn.alto:disabled{
+    color:#ffffff;
+    background:#d98a83;
+    background:color-mix(in srgb, var(--btn-rojo) 60%, var(--surface-1));
+  }
+  .btn.bloqueo:disabled{
+    color:#ffffff;
+    background:#d98a83;
+    background:color-mix(in srgb, var(--btn-rojo) 60%, var(--surface-1));
+  }
+  .btn.tonal:disabled{
+    color:var(--on-secondary-cont);
+    background:color-mix(in srgb, var(--secondary-cont) 55%, var(--surface-1));
+  }
+  .btn:active:not(:disabled){opacity:.9}
+  .fila-btn{display:flex;gap:10px;flex-wrap:wrap}
+  .fila-btn .btn{width:auto;flex:1 1 45%}
+  .onda{position:absolute;border-radius:50%;transform:scale(0);background:currentColor;opacity:.22;pointer-events:none;animation:onda .5s ease-out forwards}
+  @keyframes onda{to{transform:scale(2.6);opacity:0}}
+
+  /* ---------- tarjetas ---------- */
+  .bloque{
+    background:var(--surface-1);border-radius:20px;padding:18px 16px;
+    margin-bottom:12px;box-shadow:var(--sombra-1);
+  }
+  .bloque > h2{font-size:17px;font-weight:500;margin-bottom:4px;letter-spacing:0}
+  .bloque p.nota{color:var(--on-surface-var);font-size:14px;margin:4px 0 14px;line-height:1.5}
+  .bloque > h2 + .serie,.bloque > h2 + div,.bloque > h2 + label,.bloque > h2 + ul{margin-top:14px}
+
+  .serie{
+    display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+    background:var(--surface-2);border-radius:14px;padding:11px 14px;margin-bottom:12px;
+  }
+  .serie span{color:var(--on-surface-var);font-size:13px}
+  .serie code{font-family:var(--mono);font-size:15px;word-break:break-all;user-select:all}
+
+  .rec{
+    background:var(--surface-2);border-radius:16px;padding:13px 15px;margin-bottom:10px;
+  }
+  .rec .cab{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px}
+  .rec .tipo{font-weight:500;font-size:15px}
+  .chip{
+    font-size:11.5px;font-weight:500;color:var(--on-surface-var);
+    background:var(--surface-3);border-radius:8px;padding:3px 8px;font-family:var(--mono);
+  }
+  .valor{font-size:15px;white-space:pre-wrap;word-break:break-word;user-select:text}
+  .valor.mono{font-family:var(--mono);font-size:13.5px}
+  .rec details{margin-top:9px}
+  .rec summary{font-size:13.5px;color:var(--primary);cursor:pointer;font-weight:500}
+  .rec details pre{
+    font-family:var(--mono);font-size:12.5px;background:var(--inverse);color:var(--on-inverse);
+    padding:11px;border-radius:12px;overflow-x:auto;margin-top:8px;user-select:text;
+  }
+  table.campos{border-collapse:collapse;width:100%;font-size:14px}
+  table.campos td{border-bottom:1px solid var(--outline);padding:6px 4px;vertical-align:top}
+  table.campos tr:last-child td{border-bottom:0}
+  table.campos td:first-child{color:var(--on-surface-var);width:38%;word-break:break-word}
+
+  /* ---------- campos ---------- */
+  label.etq{display:block;font-size:12.5px;font-weight:500;color:var(--on-surface-var);margin-bottom:6px;letter-spacing:.02em}
+  input[type=text],input[type=number],input[type=url],select,textarea{
+    width:100%;font-size:16px;color:var(--on-surface);
+    background:var(--surface-2);border:1px solid transparent;border-radius:14px;
+    padding:14px;min-height:52px;appearance:none;-webkit-appearance:none;
+  }
+  textarea{min-height:96px;resize:vertical;line-height:1.5}
+  select{
+    background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23484c53' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 14px center;background-size:20px;padding-right:44px;
+  }
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary);background:var(--surface-1)}
+  button:focus-visible,summary:focus-visible,label.archivo:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
+  .medida{font-size:13px;color:var(--on-surface-var);margin-top:12px;line-height:1.5}
+  .medida b{font-family:var(--mono);color:var(--on-surface);font-weight:500}
+  .medida .falta{color:var(--error);font-weight:500}
+
+  input[type=file]{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+  label.archivo{
+    display:flex;align-items:center;justify-content:center;gap:9px;
+    min-height:52px;border-radius:26px;background:var(--secondary-cont);color:var(--on-secondary-cont);
+    font-size:15px;font-weight:500;cursor:pointer;user-select:none;
+  }
+  label.archivo svg{width:20px;height:20px}
+  .nombre-archivo{display:block;font-size:13px;color:var(--on-surface-var);margin-top:10px;text-align:center;word-break:break-word}
+
+  /* ---------- interruptores ---------- */
+  .opcion{
+    display:flex;flex-direction:row-reverse;gap:14px;align-items:center;
+    padding:14px 0;border-top:1px solid var(--surface-3);
+  }
+  .opcion:first-of-type{border-top:0}
+  .opcion .txt{flex:1;font-size:15px}
+  .opcion .txt label{display:block;font-weight:400;cursor:pointer}
+  .opcion .txt small{display:block;color:var(--on-surface-var);font-size:13px;line-height:1.45;margin-top:3px}
+  .opcion input[type=checkbox]{
+    position:relative;flex:none;width:52px;height:32px;margin:0;border-radius:16px;
+    background:var(--surface-2);border:2px solid var(--on-surface-var);
+    appearance:none;-webkit-appearance:none;cursor:pointer;
+    transition:background .18s ease, border-color .18s ease;
+  }
+  .opcion input[type=checkbox]::after{
+    content:"";position:absolute;top:50%;left:4px;width:18px;height:18px;border-radius:50%;
+    background:var(--on-surface-var);transform:translateY(-50%);
+    display:grid;place-items:center;font-size:14px;font-weight:700;line-height:1;
+    transition:transform .18s cubic-bezier(.2,.7,.3,1), width .18s ease, height .18s ease, background .18s ease, left .18s ease;
+  }
+  .opcion input[type=checkbox]:active::after{width:22px;height:22px}
+  .opcion input[type=checkbox]:checked{background:var(--btn);border-color:var(--btn)}
+  .opcion input[type=checkbox]:checked::after{
+    width:24px;height:24px;left:2px;background:#ffffff;transform:translateY(-50%) translateX(20px);
+  }
+
+  /* ---------- lista de filas ---------- */
+  .pendiente{
+    font-size:15px;margin-bottom:12px;padding:13px 15px;
+    background:var(--primary-cont);color:var(--on-primary-cont);border-radius:16px;word-break:break-word;
+  }
+  .pendiente b{font-weight:500}
+  ol.filas{margin-top:10px;padding-left:24px;font-size:14px;max-height:240px;overflow:auto}
+  ol.filas li{padding:4px 0;word-break:break-word}
+  ol.filas li[data-est="grabada"]{color:var(--ok)}
+  ol.filas li[data-est="omitida"]{color:var(--on-surface-var);text-decoration:line-through}
+  #detalleFilas summary{font-size:14px;color:var(--primary);cursor:pointer;font-weight:500;padding:6px 0}
+
+  /* ---------- registro ---------- */
+  .lista-reg{list-style:none;padding:0}
+  .lista-reg li{display:flex;gap:8px;align-items:center;border-top:1px solid var(--surface-3);padding:10px 0;font-size:14.5px}
+  .lista-reg li:first-child{border-top:0}
+  .lista-reg .datos{flex:1;min-width:0}
+  .lista-reg .meta{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;color:var(--on-surface-var);font-size:12px}
+  .lista-reg .meta b{color:var(--on-surface);font-size:14.5px;font-weight:500}
+  .lista-reg .res{word-break:break-word;color:var(--on-surface-var);font-size:14px;margin-top:2px}
+  .vacio{color:var(--on-surface-var);font-size:14.5px;padding:6px 0}
+  .quitar{
+    border:0;background:transparent;border-radius:50%;
+    width:44px;height:44px;color:var(--error);font-size:20px;cursor:pointer;flex:none;
+  }
+  .quitar:active{background:var(--surface-2)}
+  .quitar.mini{width:40px;height:40px;font-size:18px}
+
+  /* ---------- ayuda ---------- */
+  .ayuda h3{font-size:15px;font-weight:500;margin:20px 0 6px}
+  .ayuda h3:first-of-type{margin-top:14px}
+  .ayuda p,.ayuda li{font-size:14.5px;color:var(--on-surface-var);line-height:1.55}
+  .ayuda ul{margin-top:6px;padding-left:20px}
+  .ayuda li{margin-bottom:6px}
+
+  /* ---------- navegación inferior ---------- */
+  nav.pestanas{
+    position:fixed;left:0;right:0;bottom:0;z-index:30;
+    background:var(--surface-2);
+    display:grid;grid-template-columns:repeat(4,1fr);
+    padding:12px 0 calc(14px + env(safe-area-inset-bottom,0px));
+    user-select:none;
+  }
+  nav.pestanas button{
+    border:0;background:none;padding:0;cursor:pointer;
+    color:var(--on-surface-var);font-size:12px;font-weight:500;
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+  }
+  nav.pestanas .ind{
+    display:grid;place-items:center;width:64px;height:32px;border-radius:16px;
+    background:transparent;transition:background .2s ease;
+  }
+  nav.pestanas button svg{width:24px;height:24px}
+  nav.pestanas button[aria-selected="true"]{color:var(--on-surface)}
+  nav.pestanas button[aria-selected="true"] .ind{background:var(--secondary-cont);color:var(--on-secondary-cont)}
+
+  /* ---------- avisos y diálogo ---------- */
+  #mensaje{
+    position:fixed;left:16px;right:16px;bottom:calc(100px + env(safe-area-inset-bottom,0px));z-index:50;
+    background:var(--inverse);color:var(--on-inverse);border-radius:12px;
+    padding:14px 16px;font-size:14px;box-shadow:var(--sombra-2);
+    animation:sube .22s ease-out;
+  }
+  #mensaje[hidden]{display:none}
+  @keyframes sube{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+  .velo{
+    position:fixed;inset:0;z-index:60;background:var(--scrim);
+    display:grid;place-items:center;padding:24px;animation:aparece .16s ease-out;
+  }
+  .velo[hidden]{display:none}
+  @keyframes aparece{from{opacity:0}to{opacity:1}}
+  .dialogo{
+    background:var(--surface-1);color:var(--on-surface);
+    border-radius:28px;padding:24px;max-width:400px;width:100%;
+    box-shadow:var(--sombra-2);animation:sube .2s ease-out;
+  }
+  .dialogo h3{font-size:22px;font-weight:400;margin-bottom:12px}
+  .dialogo p{font-size:14px;color:var(--on-surface-var);line-height:1.55;white-space:pre-wrap;word-break:break-word}
+  .dialogo .acciones{display:flex;justify-content:flex-end;gap:8px;margin-top:24px}
+  .dialogo .acciones button{
+    border:0;background:transparent;color:var(--primary);
+    font-size:14px;font-weight:500;padding:10px 14px;border-radius:20px;cursor:pointer;min-height:44px;
+  }
+  .dialogo .acciones button:active{background:var(--surface-2)}
+  .dialogo .acciones button.peligro{color:var(--error)}
+  /* ---------- texto blanco en todos los botones (modo oscuro) ---------- */
+  @media (prefers-color-scheme: dark){
+    .btn,
+    .btn.fantasma,
+    .btn.chico,
+    .btn.tonal,
+    .btn.alto,
+    .btn.bloqueo,
+    .btn:disabled,
+    .btn.tonal:disabled,
+    .btn.bloqueo:disabled,
+    .btn:disabled:not(.fantasma),
+    label.archivo,
+    label.archivo svg{color:#ffffff}
+  }
+  /* ---------- modo claro: todo azul salvo los rojos ---------- */
+  @media (prefers-color-scheme: light){
+    .btn,
+    .btn.fantasma,
+    .btn.tonal,
+    .btn.chico,
+    .btn:disabled,
+    .btn.fantasma:disabled,
+    label.archivo{
+      background:var(--btn);
+      color:#ffffff;
+      box-shadow:none;
+      opacity:1;
+    }
+    label.archivo svg{color:#ffffff}
+    .btn.alto,
+    .btn.bloqueo,
+    .btn.alto:disabled,
+    .btn.bloqueo:disabled{background:var(--btn-rojo);color:#ffffff;opacity:1}
+  }
+  /* ---------- todos los botones como "Iniciar lectura", salvo los rojos ---------- */
+  .btn:not(.alto):not(.bloqueo),
+  .btn:not(.alto):not(.bloqueo):disabled,
+  label.archivo{
+    background:var(--btn);
+    color:#ffffff;
+    box-shadow:none;
+    opacity:1;
+    min-height:52px;
+    padding:0 22px;
+    border-radius:26px;
+    font-size:15px;
+    font-weight:500;
+  }
+  label.archivo svg{color:#ffffff}
+  .btn.alto,
+  .btn.bloqueo,
+  .btn.alto:disabled,
+  .btn.bloqueo:disabled{background:var(--btn-rojo);color:#ffffff;opacity:1}
+  /* ---------- estado inactivo: mismo color, atenuado ---------- */
+  .btn:disabled,
+  .btn:not(.alto):not(.bloqueo):disabled,
+  .btn.alto:disabled,
+  .btn.bloqueo:disabled{opacity:.4;cursor:not-allowed}
+</style>
+</head>
+<body>
+
+<header class="barra">
+  <h1>Etiquetas NFC</h1>
+  <span class="pastilla" id="pastillaEstado">Revisando…</span>
+</header>
+
+<main>
+  <div class="aviso" id="avisoSoporte" hidden></div>
+
+  <!-- ===================== LEER ===================== -->
+  <section id="tab-leer">
+    <div class="zona" id="zonaLeer" data-estado="reposo">
+      <div class="antena">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
+          <path d="M5.5 3.5C3.3 6 2 8.9 2 12s1.3 6 3.5 8.5"/>
+          <path d="M9 6.5C7.5 8 6.7 9.9 6.7 12s.8 4 2.3 5.5"/>
+          <path d="M18.5 3.5C20.7 6 22 8.9 22 12s-1.3 6-3.5 8.5"/>
+          <path d="M15 6.5c1.5 1.5 2.3 3.4 2.3 5.5s-.8 4-2.3 5.5"/>
+          <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/>
+        </svg>
+      </div>
+      <p id="textoLeer" aria-live="polite">Inicia la lectura y acerca la etiqueta a la parte trasera del teléfono.</p>
+      <div class="fila-btn">
+        <button class="btn" id="btnLeer">Iniciar lectura</button>
+        <button class="btn fantasma" id="btnDetenerLeer" disabled>Detener</button>
+      </div>
+    </div>
+
+    <div class="bloque" id="bloqueLectura" hidden>
+      <h2>Última etiqueta leída</h2>
+      <div class="serie">
+        <span>Número de serie</span>
+        <code id="serieLeida">—</code>
+      </div>
+      <div id="registrosLeidos"></div>
+      <div class="fila-btn" style="margin-top:12px">
+        <button class="btn fantasma chico" id="btnCopiarTodo">Copiar contenido</button>
+        <button class="btn fantasma chico" id="btnClonar">Pasar a escritura</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== ESCRIBIR ===================== -->
+  <section id="tab-escribir" hidden>
+    <div class="zona" id="zonaEscribir" data-estado="reposo">
+      <div class="antena">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3.5 6.5C2 8.2 1.2 10 1.2 12s.8 3.8 2.3 5.5"/>
+          <path d="M20.5 6.5c1.5 1.7 2.3 3.5 2.3 5.5s-.8 3.8-2.3 5.5"/>
+          <path d="M12 15.5V5"/>
+          <path d="M8.5 8.5 12 5l3.5 3.5"/>
+          <circle cx="12" cy="18.6" r="1.4" fill="currentColor" stroke="none"/>
+        </svg>
+      </div>
+      <p id="textoEscribir" aria-live="polite">Escribe el texto abajo y luego acerca la etiqueta.</p>
+      <div class="fila-btn">
+        <button class="btn" id="btnEscribir">Escribir en la etiqueta</button>
+        <button class="btn fantasma" id="btnDetenerEscribir" disabled>Cancelar</button>
+      </div>
+    </div>
+
+    <div class="bloque">
+      <h2>Matrícula</h2>
+      <input type="text" id="textoGrabar" placeholder="Matrícula" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" spellcheck="false" enterkeyhint="done">
+      <p class="medida" id="medida">Tamaño aproximado: <b>0 bytes</b></p>
+    </div>
+
+    <div class="bloque">
+      <h2>Escribir una lista desde un archivo</h2>
+      <p class="nota">Sube un CSV o un Excel con los textos en una columna. Se graba una etiqueta por fila, en orden.</p>
+      <input type="file" id="archivoLista" accept=".csv,.txt,.xlsx,.xlsm,.xls">
+      <label class="archivo" for="archivoLista" tabindex="0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"/><path d="m7.5 8.5 4.5-4.5 4.5 4.5"/><path d="M4.5 15v3.5a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5V15"/></svg>
+        Elegir archivo CSV o Excel
+      </label>
+      <span class="nombre-archivo" id="nombreArchivo"></span>
+      <div id="cajaColumna" hidden style="margin-top:12px">
+        <label class="etq" for="selColumna">Columna con el texto</label>
+        <select id="selColumna"></select>
+        <div class="opcion" style="margin-top:8px">
+          <input type="checkbox" id="optEncabezado" checked>
+          <span class="txt"><label for="optEncabezado">La primera fila son los títulos de las columnas</label></span>
+        </div>
+      </div>
+      <div id="avanceLista" hidden style="margin-top:12px">
+        <p class="contador" id="avanceNum">0<small>de 0 filas grabadas</small></p>
+        <p class="pendiente" id="filaActual"></p>
+        <details id="detalleFilas"><summary>Ver los textos de la lista</summary><ol class="filas" id="olFilas"></ol></details>
+        <div class="fila-btn" style="margin-top:12px">
+          <button class="btn" id="btnEscribirLista">Escribir la lista</button>
+          <button class="btn fantasma" id="btnSaltar">Saltar esta fila</button>
+        </div>
+        <div class="fila-btn" style="margin-top:8px">
+          <button class="btn fantasma chico" id="btnReiniciarLista">Reiniciar avance</button>
+          <button class="btn fantasma chico" id="btnQuitarLista">Quitar la lista</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bloque">
+      <h2>Opciones</h2>
+      <div class="opcion">
+        <input type="checkbox" id="optSobrescribir" checked>
+        <span class="txt"><label for="optSobrescribir">Sobrescribir lo que ya tenga la etiqueta</label>
+        <small>Si lo desactivas, sólo escribe en etiquetas vacías.</small></span>
+      </div>
+    </div>
+
+    <div class="bloque">
+      <h2>Acciones sobre la etiqueta</h2>
+      <p class="nota">Estas dos acciones también necesitan que acerques la etiqueta.</p>
+      <div class="fila-btn">
+        <button class="btn alto" id="btnBorrar">Borrar etiqueta</button>
+        <button class="btn bloqueo" id="btnBloquear">Bloquear como sólo lectura</button>
+      </div>
+      <p class="medida">El bloqueo es permanente: la etiqueta ya no se podrá volver a grabar nunca.</p>
+    </div>
+  </section>
+
+  <!-- ===================== REGISTRO ===================== -->
+  <section id="tab-registro" hidden>
+    <div class="bloque">
+      <h2>Movimientos de esta sesión</h2>
+      <p class="nota" id="resumenRegistro">Aquí se anota cada lectura y cada escritura, con hora y número de serie.</p>
+      <ul class="lista-reg" id="listaRegistro"><li><p class="vacio">Todavía no hay movimientos.</p></li></ul>
+      <div class="fila-btn" style="margin-top:12px">
+        <button class="btn fantasma chico" id="btnCSVLecturas">CSV de lecturas</button>
+        <button class="btn fantasma chico" id="btnCSVEscrituras">CSV de escrituras</button>
+      </div>
+      <div class="fila-btn" style="margin-top:8px">
+        <button class="btn alto" id="btnLimpiar">Vaciar registro</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== AYUDA ===================== -->
+  <section id="tab-ayuda" hidden>
+    <div class="bloque ayuda">
+      <h2>Qué necesitas para que funcione</h2>
+      <h3>Teléfono y navegador</h3>
+      <ul>
+        <li>Android con NFC, usando Chrome o Edge (versión 89 o más nueva).</li>
+        <li>NFC encendido en los ajustes del teléfono.</li>
+        <li>El iPhone no permite leer ni escribir etiquetas desde el navegador; ahí esta app no va a funcionar.</li>
+      </ul>
+      <h3>Cómo abrir el archivo</h3>
+      <ul>
+        <li>Lo más seguro es subir el archivo a un alojamiento gratuito con https (por ejemplo GitHub Pages o Netlify Drop) y abrir esa dirección en el teléfono.</li>
+        <li>También puedes abrirlo como archivo local en Chrome de Android; si el navegador no da permiso de NFC, verás el aviso rojo arriba y entonces sí hace falta el https.</li>
+        <li>No necesita internet para trabajar: todo ocurre en el teléfono.</li>
+      </ul>
+      <h3>Instalarla como app</h3>
+      <ul>
+        <li>Con la página abierta en Chrome, entra al menú de los tres puntos y elige "Instalar aplicación" o "Agregar a la pantalla de inicio".</li>
+        <li>Queda con su propio icono y se abre a pantalla completa, sin la barra del navegador.</li>
+        <li>Una vez instalada funciona aunque no haya señal; sólo la lectura de archivos Excel necesita conexión la primera vez.</li>
+      </ul>
+      <h3>Etiquetas y capacidad</h3>
+      <ul>
+        <li>NTAG213: unos 132 bytes útiles. Alcanza para un texto corto o un identificador.</li>
+        <li>NTAG215: unos 492 bytes. NTAG216: unos 872 bytes.</li>
+        <li>El tamaño aproximado del texto se muestra debajo del campo, en la pestaña Escribir.</li>
+      </ul>
+      <h3>Si no detecta la etiqueta</h3>
+      <ul>
+        <li>Mueve la etiqueta despacio por la parte de atrás del teléfono: la antena suele estar en la mitad superior.</li>
+        <li>Quita la funda si es gruesa o tiene metal, y separa la etiqueta de superficies metálicas.</li>
+        <li>Una etiqueta bloqueada como sólo lectura se puede leer pero ya no se puede regrabar.</li>
+        <li>Si aparece un error al escribir, casi siempre es que la etiqueta se retiró antes de terminar o que el contenido no cabe.</li>
+      </ul>
+      <h3>Escribir una lista</h3>
+      <ul>
+        <li>El archivo puede ser CSV o Excel. Sólo se usa la columna que elijas y la primera hoja del libro.</li>
+        <li>Las filas vacías se ignoran. Se graba una etiqueta por fila, en el orden del archivo.</li>
+        <li>El avance se guarda en el teléfono: si cierras la página, al volver retoma en la fila donde quedó.</li>
+        <li>El CSV funciona sin internet. El Excel necesita conexión la primera vez que lo abres; si no la hay, guarda el archivo como CSV.</li>
+      </ul>
+      <h3>Qué se graba</h3>
+      <ul>
+        <li>Una matrícula de 8 dígitos, sin letras, espacios ni guiones. El campo no acepta otros caracteres y del archivo se descartan las filas que no cumplan.</li>
+        <li>Se guarda como texto en español, el formato más compatible: cualquier teléfono con NFC lo lee.</li>
+        <li>Al leer, la app sí interpreta etiquetas con enlaces u otros formatos, aunque aquí no se escriban.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<nav class="pestanas" role="tablist">
+  <button role="tab" aria-selected="true" data-tab="leer">
+    <span class="ind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M7 4.5C5.4 6.4 4.6 9 4.6 12s.8 5.6 2.4 7.5"/><path d="M17 4.5c1.6 1.9 2.4 4.5 2.4 7.5s-.8 5.6-2.4 7.5"/><circle cx="12" cy="12" r="2.1" fill="currentColor" stroke="none"/></svg></span>
+    Leer
+  </button>
+  <button role="tab" aria-selected="false" data-tab="escribir">
+    <span class="ind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 13v4"/><path d="M14.5 5.5 18.5 9.5"/></svg></span>
+    Escribir
+  </button>
+  <button role="tab" aria-selected="false" data-tab="registro">
+    <span class="ind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 4h13v16h-13z"/><path d="M9 9h6M9 12.5h6M9 16h3.5"/></svg></span>
+    Registro
+  </button>
+  <button role="tab" aria-selected="false" data-tab="ayuda">
+    <span class="ind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.7 9.4a2.4 2.4 0 0 1 4.6.8c0 1.6-2.3 1.9-2.3 3.3"/><circle cx="12" cy="16.8" r=".95" fill="currentColor" stroke="none"/></svg></span>
+    Ayuda
+  </button>
+</nav>
+
+<div id="mensaje" role="status" hidden></div>
+
+<div class="velo" id="velo" hidden>
+  <div class="dialogo" role="dialog" aria-modal="true" aria-labelledby="dlgTitulo">
+    <h3 id="dlgTitulo"></h3>
+    <p id="dlgTexto"></p>
+    <div class="acciones">
+      <button type="button" id="dlgNo">Cancelar</button>
+      <button type="button" id="dlgSi">Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(s,r){ return (r||document).querySelector(s); };
+  var $$ = function(s,r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); };
+
+  var soportado = ('NDEFReader' in window);
+  var nfcListo = soportado;
+  var movimientos = [];
+  var ultimaLectura = null;
+  var abortoLectura = null;
+  var abortoEscritura = null;
+
+  /* ---------- guardado opcional ---------- */
+  var guarda = {
+    leer: function(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } },
+    poner: function(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+  };
+
+  /* ---------- utilidades ---------- */
+  function aviso(txt){
+    var caja = $('#mensaje');
+    caja.textContent = txt;
+    caja.hidden = false;
+    clearTimeout(aviso.t);
+    aviso.t = setTimeout(function(){ caja.hidden = true; }, 3800);
+  }
+  function vibrar(p){ try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){} }
+
+  var dlgResolver = null;
+  function pregunta(titulo, texto, aceptar, peligro){
+    return new Promise(function(res){
+      $('#dlgTitulo').textContent = titulo;
+      $('#dlgTexto').textContent = texto;
+      $('#dlgSi').textContent = aceptar || 'Aceptar';
+      $('#dlgSi').className = peligro ? 'peligro' : '';
+      $('#velo').hidden = false;
+      dlgResolver = res;
+      setTimeout(function(){ $('#dlgSi').focus(); }, 30);
+    });
+  }
+  function cerrarDialogo(valor){
+    $('#velo').hidden = true;
+    var r = dlgResolver; dlgResolver = null;
+    if(r) r(valor);
+  }
+  $('#dlgSi').addEventListener('click', function(){ cerrarDialogo(true); });
+  $('#dlgNo').addEventListener('click', function(){ cerrarDialogo(false); });
+  $('#velo').addEventListener('click', function(e){ if(e.target === this) cerrarDialogo(false); });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && !$('#velo').hidden) cerrarDialogo(false);
+  });
+
+  document.addEventListener('pointerdown', function(e){
+    var b = e.target.closest('.btn:not(:disabled), nav.pestanas button, label.archivo, .quitar');
+    if(!b) return;
+    if(getComputedStyle(b).position === 'static') b.style.position = 'relative';
+    b.style.overflow = 'hidden';
+    var caja = b.getBoundingClientRect();
+    var d = Math.max(caja.width, caja.height);
+    var o = document.createElement('span');
+    o.className = 'onda';
+    o.style.width = o.style.height = d + 'px';
+    o.style.left = (e.clientX - caja.left - d / 2) + 'px';
+    o.style.top = (e.clientY - caja.top - d / 2) + 'px';
+    b.appendChild(o);
+    setTimeout(function(){ o.remove(); }, 520);
+  });
+
+  window.addEventListener('scroll', function(){
+    $('.barra').classList.toggle('elevada', window.scrollY > 4);
+  }, { passive:true });
+  function hora(d){
+    var p = function(n){ return String(n).padStart(2,'0'); };
+    return p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());
+  }
+  function fechaHora(d){
+    var p = function(n){ return String(n).padStart(2,'0'); };
+    return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear()+' '+hora(d);
+  }
+  function aHex(dv){
+    if(!dv) return '';
+    var b = new Uint8Array(dv.buffer, dv.byteOffset, dv.byteLength), s = [];
+    for(var i=0;i<b.length;i++) s.push(b[i].toString(16).padStart(2,'0'));
+    return s.join(' ');
+  }
+  function bytesTexto(t){ return new TextEncoder().encode(t||'').length; }
+  function copiar(txt){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(function(){ aviso('Contenido copiado.'); },
+        function(){ aviso('No se pudo copiar.'); });
+    } else { aviso('Este navegador no permite copiar.'); }
+  }
+  function estado(zona, est, txt){
+    var z = $(zona === 'leer' ? '#zonaLeer' : '#zonaEscribir');
+    z.setAttribute('data-estado', est);
+    $(zona === 'leer' ? '#textoLeer' : '#textoEscribir').innerHTML = txt;
+  }
+
+  /* ---------- soporte ---------- */
+  function aplicarDisponibilidad(){
+    var ocupado = !$('#btnDetenerEscribir').disabled;
+    $('#btnLeer').disabled = !nfcListo || !$('#btnDetenerLeer').disabled;
+    $('#btnBorrar').disabled = !nfcListo || ocupado;
+    $('#btnBloquear').disabled = !nfcListo || ocupado;
+    $('#btnEscribirLista').disabled = !nfcListo || ocupado;
+    actualizarBotonEscribir();
+  }
+
+  function revisarSoporte(){
+    var pastilla = $('#pastillaEstado');
+    var caja = $('#avisoSoporte');
+    if(soportado){
+      pastilla.textContent = 'NFC disponible';
+      pastilla.className = 'pastilla si';
+      caja.hidden = true;
+      if(navigator.permissions && navigator.permissions.query){
+        navigator.permissions.query({name:'nfc'}).then(function(p){
+          var revisar = function(){
+            if(p.state === 'denied'){
+              nfcListo = false;
+              pastilla.textContent = 'Permiso negado';
+              pastilla.className = 'pastilla no';
+              caja.hidden = false;
+              caja.innerHTML = '<b>El permiso de NFC está negado</b>Ábrelo desde el candado de la barra de direcciones, en Permisos del sitio, y vuelve a intentar. Mientras tanto, las acciones sobre la etiqueta quedan apagadas.';
+            } else {
+              nfcListo = true;
+              pastilla.textContent = 'NFC disponible';
+              pastilla.className = 'pastilla si';
+              caja.hidden = true;
+            }
+            aplicarDisponibilidad();
+          };
+          p.onchange = revisar;
+          revisar();
+        }).catch(function(){});
+      }
+    } else {
+      nfcListo = false;
+      pastilla.textContent = 'Sin NFC';
+      pastilla.className = 'pastilla no';
+      caja.hidden = false;
+      var motivo = !window.isSecureContext
+        ? 'La página no se está abriendo en un contexto seguro. Súbela a un alojamiento con https y ábrela desde ahí.'
+        : 'Este navegador no tiene la función de NFC. Usa Chrome o Edge en un Android con NFC; en iPhone no está disponible.';
+      caja.innerHTML = '<b>Aquí no se puede leer ni escribir</b>'+motivo+' El resto de la app sí se puede revisar.';
+    }
+    aplicarDisponibilidad();
+  }
+
+  /* ---------- pestañas ---------- */
+  $$('nav.pestanas button').forEach(function(b){
+    b.addEventListener('click', function(){
+      $$('nav.pestanas button').forEach(function(o){ o.setAttribute('aria-selected', String(o===b)); });
+      ['leer','escribir','registro','ayuda'].forEach(function(t){
+        $('#tab-'+t).hidden = (t !== b.dataset.tab);
+      });
+      window.scrollTo({top:0});
+    });
+  });
+
+  /* ===================== LECTURA ===================== */
+  function nombreTipo(t){
+    if(t === 'text') return 'Texto';
+    if(t === 'url') return 'Enlace';
+    if(t === 'absolute-url') return 'Enlace absoluto';
+    if(t === 'mime') return 'Archivo o datos';
+    if(t === 'smart-poster') return 'Póster inteligente';
+    if(t === 'empty') return 'Vacío';
+    if(t === 'unknown') return 'Desconocido';
+    return t;
+  }
+
+  function leerRegistro(r){
+    var res = { tipo:r.recordType, titulo:nombreTipo(r.recordType), chips:[], valor:'', mono:false, campos:null, hex:aHex(r.data) };
+    try{
+      if(r.recordType === 'text'){
+        res.valor = new TextDecoder(r.encoding || 'utf-8').decode(r.data);
+        if(r.lang) res.chips.push('idioma '+r.lang);
+        if(r.encoding) res.chips.push(r.encoding);
+      } else if(r.recordType === 'url' || r.recordType === 'absolute-url'){
+        res.valor = new TextDecoder().decode(r.data);
+        res.mono = true;
+      } else if(r.recordType === 'mime'){
+        res.chips.push(r.mediaType || 'sin tipo');
+        var txt = new TextDecoder().decode(r.data);
+        if((r.mediaType||'').indexOf('json') >= 0){
+          try{
+            var obj = JSON.parse(txt);
+            if(obj && typeof obj === 'object' && !Array.isArray(obj)){
+              res.titulo = 'Campos';
+              res.campos = Object.keys(obj).map(function(k){ return [k, String(obj[k])]; });
+            } else { res.valor = txt; res.mono = true; }
+          }catch(e){ res.valor = txt; res.mono = true; }
+        } else if((r.mediaType||'').indexOf('text') === 0){
+          res.valor = txt;
+        } else {
+          res.valor = '('+ (r.data ? r.data.byteLength : 0) +' bytes de datos binarios)';
+          res.mono = true;
+        }
+      } else if(r.recordType === 'empty'){
+        res.valor = 'La etiqueta no tiene contenido grabado.';
+      } else if(r.recordType === 'smart-poster'){
+        var partes = [];
+        try{
+          r.toRecords().forEach(function(sub){
+            var s = leerRegistro(sub);
+            partes.push(s.titulo+': '+(s.valor || ''));
+          });
+        }catch(e){}
+        res.valor = partes.join('\n');
+      } else {
+        res.valor = r.data ? new TextDecoder().decode(r.data) : '';
+        res.mono = true;
+        if(r.mediaType) res.chips.push(r.mediaType);
+        if(r.id) res.chips.push('id '+r.id);
+      }
+    }catch(e){
+      res.valor = 'No se pudo interpretar este dato.';
+    }
+    if(r.data) res.chips.push(r.data.byteLength+' bytes');
+    return res;
+  }
+
+  function pintarLectura(serie, mensaje){
+    $('#bloqueLectura').hidden = false;
+    $('#serieLeida').textContent = serie || 'no informado';
+    var cont = $('#registrosLeidos');
+    cont.innerHTML = '';
+    var lista = [];
+    (mensaje.records || []).forEach(function(r){
+      var d = leerRegistro(r);
+      lista.push(d);
+      var div = document.createElement('div');
+      div.className = 'rec';
+      var cab = '<div class="cab"><span class="tipo">'+d.titulo+'</span>'+
+        d.chips.map(function(c){ return '<span class="chip">'+c+'</span>'; }).join('')+'</div>';
+      var cuerpo = '';
+      if(d.campos){
+        cuerpo = '<table class="campos">'+d.campos.map(function(p){
+          return '<tr><td>'+escapar(p[0])+'</td><td>'+escapar(p[1])+'</td></tr>';
+        }).join('')+'</table>';
+      } else {
+        cuerpo = '<p class="valor'+(d.mono?' mono':'')+'">'+escapar(d.valor)+'</p>';
+      }
+      var crudo = d.hex ? '<details><summary>Ver bytes</summary><pre>'+d.hex+'</pre></details>' : '';
+      div.innerHTML = cab + cuerpo + crudo;
+      cont.appendChild(div);
+    });
+    if(!(mensaje.records || []).length){
+      cont.innerHTML = '<div class="rec"><p class="valor">La etiqueta se detectó pero no trae ningún dato grabado.</p></div>';
+    }
+    ultimaLectura = { serie:serie, registros:lista, crudos:mensaje.records || [] };
+  }
+
+  function escapar(t){
+    return String(t == null ? '' : t)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function resumen(lista){
+    return lista.map(function(d){
+      if(d.campos) return d.campos.map(function(p){ return p[0]+'='+p[1]; }).join(' | ');
+      return (d.valor || '').replace(/\s+/g,' ').slice(0,120);
+    }).join(' || ');
+  }
+
+  $('#btnLeer').addEventListener('click', function(){
+    if(!soportado) return;
+    var lector;
+    try{ lector = new NDEFReader(); }catch(e){ return aviso('No se pudo iniciar el lector.'); }
+    abortoLectura = new AbortController();
+    lector.onreading = function(ev){
+      vibrar(60);
+      pintarLectura(ev.serialNumber, ev.message);
+      estado('leer','ok','Etiqueta leída. Sigue acercando etiquetas o detén la lectura.');
+      anotar('Lectura', ev.serialNumber, resumen(ultimaLectura.registros));
+    };
+    lector.onreadingerror = function(){
+      vibrar([40,60,40]);
+      estado('leer','error','No se pudo leer esa etiqueta. Aléjala y vuelve a acercarla despacio.');
+    };
+    lector.scan({ signal: abortoLectura.signal }).then(function(){
+      estado('leer','esperando','<strong>Esperando etiqueta…</strong><br>Acércala a la parte trasera del teléfono.');
+      $('#btnLeer').disabled = true;
+      $('#btnDetenerLeer').disabled = false;
+    }).catch(function(err){
+      estado('leer','error','No se pudo activar la lectura: '+(err && err.message ? err.message : 'error desconocido'));
+      abortoLectura = null;
+    });
+  });
+
+  $('#btnDetenerLeer').addEventListener('click', function(){
+    if(abortoLectura){ abortoLectura.abort(); abortoLectura = null; }
+    $('#btnLeer').disabled = false;
+    $('#btnDetenerLeer').disabled = true;
+    estado('leer','reposo','Lectura detenida.');
+  });
+
+  $('#btnCopiarTodo').addEventListener('click', function(){
+    if(!ultimaLectura) return;
+    var t = 'Serie: '+(ultimaLectura.serie||'')+'\n'+ultimaLectura.registros.map(function(d){
+      if(d.campos) return d.campos.map(function(p){ return p[0]+': '+p[1]; }).join('\n');
+      return d.titulo+': '+d.valor;
+    }).join('\n');
+    copiar(t);
+  });
+
+  /* ===================== TEXTO A GRABAR ===================== */
+  function soloDigitos(t){ return String(t == null ? '' : t).replace(/\D/g, '').slice(0, 8); }
+  function matriculaValida(t){ return /^\d{8}$/.test(t); }
+
+  $('#textoGrabar').addEventListener('input', function(){
+    var limpio = soloDigitos(this.value);
+    if(this.value !== limpio) this.value = limpio;
+    medir(); recordar(); actualizarBotonEscribir();
+  });
+
+  $('#textoGrabar').addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      this.blur();
+      if(!$('#btnEscribir').disabled) $('#btnEscribir').click();
+    }
+  });
+
+  function armarMensaje(){
+    var t = $('#textoGrabar').value.trim();
+    if(!matriculaValida(t)) return { records:[], resumen:'' };
+    return { records:[{ recordType:'text', lang:'es', encoding:'utf-8', data:t }], resumen:t };
+  }
+
+  function medir(){
+    var t = $('#textoGrabar').value.trim();
+    $('#medida').innerHTML = matriculaValida(t)
+      ? 'Matrícula completa: <b>'+t+'</b>'
+      : '<span class="falta">Escribe un valor para poder iniciar la escritura.</span>';
+  }
+
+  function recordar(){ guarda.poner('nfc_texto', $('#textoGrabar').value); }
+
+  function restaurarFormulario(){
+    var t = guarda.leer('nfc_texto');
+    if(typeof t === 'string') $('#textoGrabar').value = soloDigitos(t);
+    medir();
+    actualizarBotonEscribir();
+  }
+
+  /* ===================== ESCRITURA ===================== */
+  var serieVista = '', serieVistaEn = 0;
+
+  function escuchar(escritor){
+    serieVista = ''; serieVistaEn = 0;
+    escritor.onreading = function(ev){
+      serieVista = ev.serialNumber || '';
+      serieVistaEn = Date.now();
+    };
+    escritor.onreadingerror = function(){};
+    try{
+      var pr = escritor.scan({ signal: abortoEscritura.signal });
+      if(pr && pr.catch) pr.catch(function(){});
+    }catch(e){}
+  }
+
+  function anotarTag(accion, texto){
+    setTimeout(function(){
+      var serie = (Date.now() - serieVistaEn < 8000) ? serieVista : '';
+      anotar(accion, serie, texto);
+      serieVista = ''; serieVistaEn = 0;
+    }, 400);
+  }
+
+  function hayTexto(){ return matriculaValida($('#textoGrabar').value.trim()); }
+
+  function actualizarBotonEscribir(){
+    $('#btnEscribir').disabled = !nfcListo || enLista || !hayTexto() || !$('#btnDetenerEscribir').disabled;
+  }
+
+  function botonesEscritura(activo){
+    $('#btnEscribir').disabled = activo;
+    $('#btnBorrar').disabled = activo || !nfcListo;
+    $('#btnBloquear').disabled = activo || !nfcListo;
+    $('#btnEscribirLista').disabled = activo || !nfcListo;
+    $('#btnDetenerEscribir').disabled = !activo;
+    if(!activo) actualizarBotonEscribir();
+  }
+
+  function escribir(){
+    var m = armarMensaje();
+    if(!m.records.length){ return aviso('Captura una matrícula de 8 dígitos.'); }
+
+    var escritor;
+    try{ escritor = new NDEFReader(); }catch(e){ return aviso('No se pudo iniciar la escritura.'); }
+    abortoEscritura = new AbortController();
+    botonesEscritura(true);
+    escuchar(escritor);
+
+    var opciones = { overwrite: $('#optSobrescribir').checked, signal: abortoEscritura.signal };
+    estado('escribir','esperando','<strong>Acerca la etiqueta ahora…</strong><br>No la retires hasta que confirme.');
+
+    escritor.write({ records:m.records }, opciones).then(function(){
+      vibrar(80);
+      anotarTag('Escritura', m.resumen);
+      estado('escribir','ok','Etiqueta grabada correctamente.');
+    }).catch(function(err){
+      if(err && err.name === 'AbortError') return;
+      vibrar([40,60,40]);
+      estado('escribir','error','No se pudo grabar: '+(err && err.message ? err.message : 'error desconocido')+'<br>Revisa que la etiqueta no esté bloqueada y que el texto quepa.');
+      anotarTag('Error de escritura', (err && err.message) || 'error');
+    }).then(function(){
+      if(abortoEscritura){ abortoEscritura.abort(); abortoEscritura = null; }
+      botonesEscritura(false);
+    });
+  }
+
+  $('#btnEscribir').addEventListener('click', escribir);
+
+  $('#btnDetenerEscribir').addEventListener('click', function(){
+    var eraLista = enLista;
+    enLista = false;
+    if(abortoEscritura){ abortoEscritura.abort(); abortoEscritura = null; }
+    botonesEscritura(false);
+    if(eraLista){
+      pintarLista();
+      estado('escribir','reposo','Lista detenida en la fila '+(indiceLista+1)+'. Puedes continuar después desde donde quedó.');
+    } else {
+      estado('escribir','reposo','Escritura cancelada.');
+    }
+  });
+
+  $('#btnBorrar').addEventListener('click', function(){
+    pregunta('Borrar la etiqueta', 'Se borrará todo el contenido de la etiqueta que acerques. Después podrás volver a grabarla.', 'Borrar', true).then(function(ok){
+      if(!ok) return;
+      var escritor;
+      try{ escritor = new NDEFReader(); }catch(e){ return aviso('No se pudo iniciar la escritura.'); }
+      abortoEscritura = new AbortController();
+      botonesEscritura(true);
+      escuchar(escritor);
+      estado('escribir','esperando','<strong>Acerca la etiqueta para borrarla…</strong>');
+      escritor.write({ records:[{ recordType:'empty' }] }, { overwrite:true, signal:abortoEscritura.signal })
+        .then(function(){
+          vibrar(80);
+          estado('escribir','ok','Etiqueta borrada.');
+          anotarTag('Borrado', 'etiqueta vaciada');
+        })
+        .catch(function(err){
+          if(err && err.name === 'AbortError') return;
+          estado('escribir','error','No se pudo borrar: '+(err && err.message ? err.message : 'error desconocido'));
+        })
+        .then(function(){
+          if(abortoEscritura){ abortoEscritura.abort(); abortoEscritura = null; }
+          botonesEscritura(false);
+        });
+    });
+  });
+
+  $('#btnBloquear').addEventListener('click', function(){
+    var escritor;
+    try{ escritor = new NDEFReader(); }catch(e){ return aviso('No se pudo iniciar la escritura.'); }
+    if(typeof escritor.makeReadOnly !== 'function'){
+      return aviso('Este navegador no puede bloquear etiquetas.');
+    }
+    pregunta('Bloquear para siempre', 'La etiqueta quedará como sólo lectura y nunca podrá volver a grabarse, ni por ti ni por nadie.', 'Bloquear', true).then(function(ok){
+      if(!ok) return;
+      abortoEscritura = new AbortController();
+      botonesEscritura(true);
+      escuchar(escritor);
+      estado('escribir','esperando','<strong>Acerca la etiqueta para bloquearla…</strong>');
+      escritor.makeReadOnly({ signal: abortoEscritura.signal })
+        .then(function(){
+          vibrar([80,60,80]);
+          estado('escribir','ok','Etiqueta bloqueada como sólo lectura.');
+          anotarTag('Bloqueo', 'etiqueta en sólo lectura');
+        })
+        .catch(function(err){
+          if(err && err.name === 'AbortError') return;
+          estado('escribir','error','No se pudo bloquear: '+(err && err.message ? err.message : 'error desconocido'));
+        })
+        .then(function(){
+          if(abortoEscritura){ abortoEscritura.abort(); abortoEscritura = null; }
+          botonesEscritura(false);
+        });
+    });
+  });
+
+  /* pasar lo leído al campo de escritura */
+  $('#btnClonar').addEventListener('click', function(){
+    if(!ultimaLectura) return;
+    var t = '';
+    ultimaLectura.registros.forEach(function(d){
+      if(!t && d.tipo === 'text' && d.valor) t = d.valor;
+    });
+    if(!t) return aviso('Esa etiqueta no trae texto que se pueda copiar.');
+    $('#textoGrabar').value = t;
+    medir(); recordar(); actualizarBotonEscribir();
+    $$('nav.pestanas button').forEach(function(b){ if(b.dataset.tab === 'escribir') b.click(); });
+    aviso('Texto copiado al campo de escritura.');
+  });
+
+  /* ===================== LISTA DESDE ARCHIVO ===================== */
+  var filas = [];
+  var valores = [];
+  var indiceLista = 0;
+  var enLista = false;
+
+  function separador(linea){
+    var fuera = true, c = {',':0, ';':0, '\t':0};
+    for(var i=0;i<linea.length;i++){
+      var ch = linea[i];
+      if(ch === '"') fuera = !fuera;
+      else if(fuera && c[ch] !== undefined) c[ch]++;
+    }
+    if(c['\t'] >= c[';'] && c['\t'] >= c[',']) return '\t';
+    return c[';'] > c[','] ? ';' : ',';
+  }
+
+  function leerCSV(texto){
+    texto = texto.replace(/^\ufeff/, '');
+    var sep = separador(texto.split(/\r?\n/)[0] || '');
+    var res = [], fila = [], campo = '', dentro = false;
+    for(var i=0;i<texto.length;i++){
+      var ch = texto[i];
+      if(dentro){
+        if(ch === '"'){
+          if(texto[i+1] === '"'){ campo += '"'; i++; }
+          else dentro = false;
+        } else campo += ch;
+      } else if(ch === '"'){ dentro = true; }
+      else if(ch === sep){ fila.push(campo); campo = ''; }
+      else if(ch === '\n'){ fila.push(campo); res.push(fila); fila = []; campo = ''; }
+      else if(ch !== '\r'){ campo += ch; }
+    }
+    if(campo !== '' || fila.length){ fila.push(campo); res.push(fila); }
+    return res.filter(function(f){ return f.some(function(v){ return String(v).trim() !== ''; }); });
+  }
+
+  function cargarXLSX(){
+    return new Promise(function(res, rej){
+      if(window.XLSX) return res(window.XLSX);
+      var sc = document.createElement('script');
+      sc.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+      sc.onload = function(){ window.XLSX ? res(window.XLSX) : rej(new Error('no disponible')); };
+      sc.onerror = function(){ rej(new Error('sin conexion')); };
+      document.head.appendChild(sc);
+    });
+  }
+
+  function letraColumna(i){
+    var s = '';
+    i = i + 1;
+    while(i > 0){ var r = (i - 1) % 26; s = String.fromCharCode(65 + r) + s; i = Math.floor((i - 1) / 26); }
+    return s;
+  }
+
+  function pintarColumnas(){
+    var ancho = 0;
+    filas.forEach(function(f){ if(f.length > ancho) ancho = f.length; });
+    var conTitulos = $('#optEncabezado').checked;
+    var sel = $('#selColumna');
+    var previo = sel.value;
+    sel.innerHTML = '';
+    for(var i=0;i<ancho;i++){
+      var t = 'Columna '+letraColumna(i);
+      if(conTitulos && filas[0] && String(filas[0][i] || '').trim()) t = String(filas[0][i]).trim();
+      var op = document.createElement('option');
+      op.value = String(i);
+      op.textContent = t;
+      sel.appendChild(op);
+    }
+    if(previo && previo < ancho) sel.value = previo;
+    $('#cajaColumna').hidden = false;
+    armarValores();
+  }
+
+  function armarValores(){
+    var col = parseInt($('#selColumna').value, 10) || 0;
+    var desde = $('#optEncabezado').checked ? 1 : 0;
+    valores = [];
+    for(var i=desde;i<filas.length;i++){
+      var crudo = String(filas[i][col] == null ? '' : filas[i][col]).trim();
+      if(!crudo) continue;
+      var v = crudo.replace(/\D/g, '');
+      valores.push(matriculaValida(v)
+        ? { texto:v, estado:'pendiente' }
+        : { texto:crudo, estado:'inválida' });
+    }
+    indiceLista = 0;
+    $('#avanceLista').hidden = !valores.length;
+    pintarLista();
+    if(!valores.length) aviso('Esa columna no tiene datos.');
+    else if(!cuentaLista().pendientes) aviso('Ninguna fila de esa columna tiene una matrícula de 8 dígitos.');
+  }
+
+  function cuentaLista(){
+    var g = 0, o = 0, inv = 0, p = 0;
+    valores.forEach(function(v){
+      if(v.estado === 'grabada') g++;
+      else if(v.estado === 'omitida') o++;
+      else if(v.estado === 'inválida') inv++;
+      else p++;
+    });
+    return { grabadas:g, omitidas:o, invalidas:inv, pendientes:p, total:valores.length };
+  }
+
+  function pintarLista(){
+    var c = cuentaLista();
+    $('#avanceNum').innerHTML = c.grabadas + '<small>de ' + c.total + ' filas grabadas' +
+      (c.omitidas ? ' · ' + c.omitidas + ' omitidas' : '') +
+      (c.invalidas ? ' · ' + c.invalidas + ' sin 8 dígitos' : '') + '</small>';
+    while(indiceLista < valores.length && valores[indiceLista].estado !== 'pendiente') indiceLista++;
+    var actual = valores[indiceLista];
+    $('#filaActual').innerHTML = actual
+      ? 'Sigue la fila ' + (indiceLista + 1) + ': <b>' + escapar(actual.texto) + '</b>'
+      : 'Ya no quedan filas pendientes.';
+    var ol = $('#olFilas');
+    if($('#detalleFilas').open || valores.length <= 60){
+      var tope = Math.min(valores.length, 500);
+      var html = '';
+      for(var i=0;i<tope;i++){
+        var v = valores[i];
+        html += '<li data-est="'+v.estado+'">'+escapar(v.texto)+(v.estado === 'pendiente' ? '' : ' ('+v.estado+')')+'</li>';
+      }
+      if(valores.length > tope) html += '<li>… y '+(valores.length - tope)+' más</li>';
+      ol.innerHTML = html;
+    }
+    guardarAvance();
+  }
+
+  function guardarAvance(){
+    if(valores.length && valores.length <= 3000) guarda.poner('nfc_lista', { valores:valores, indice:indiceLista });
+    else guarda.poner('nfc_lista', null);
+  }
+
+  $('#detalleFilas').addEventListener('toggle', function(){ if(this.open) pintarLista(); });
+  $('#optEncabezado').addEventListener('change', pintarColumnas);
+  $('#selColumna').addEventListener('change', armarValores);
+
+  $('#archivoLista').addEventListener('change', function(){
+    var f = this.files && this.files[0];
+    $('#nombreArchivo').textContent = f ? f.name : '';
+    if(!f) return;
+    var nombre = f.name.toLowerCase();
+    if(/\.(xlsx|xlsm|xls)$/.test(nombre)){
+      aviso('Leyendo el Excel…');
+      cargarXLSX().then(function(XLSX){
+        var fr = new FileReader();
+        fr.onload = function(){
+          try{
+            var libro = XLSX.read(new Uint8Array(fr.result), { type:'array' });
+            var hoja = libro.Sheets[libro.SheetNames[0]];
+            filas = XLSX.utils.sheet_to_json(hoja, { header:1, blankrows:false, raw:false, defval:'' });
+            filas = filas.filter(function(fila){ return fila.some(function(v){ return String(v).trim() !== ''; }); });
+            if(!filas.length) return aviso('El Excel está vacío.');
+            pintarColumnas();
+            aviso(filas.length+' fila(s) leídas de '+libro.SheetNames[0]+'.');
+          }catch(e){ aviso('No se pudo leer el Excel. Guárdalo como CSV e inténtalo así.'); }
+        };
+        fr.readAsArrayBuffer(f);
+      }).catch(function(){
+        aviso('Para leer Excel hace falta conexión la primera vez. Guarda el archivo como CSV y súbelo así.');
+      });
+    } else {
+      var fr = new FileReader();
+      fr.onload = function(){
+        filas = leerCSV(String(fr.result));
+        if(!filas.length) return aviso('El archivo está vacío.');
+        pintarColumnas();
+        aviso(filas.length+' fila(s) leídas.');
+      };
+      fr.readAsText(f, 'utf-8');
+    }
+  });
+
+  $('#btnReiniciarLista').addEventListener('click', function(){
+    if(!valores.length) return;
+    pregunta('Reiniciar el avance', 'Todas las filas volverán a quedar pendientes y la lista empezará desde la primera.', 'Reiniciar').then(function(ok){
+      if(!ok) return;
+      valores.forEach(function(v){ if(v.estado !== 'inválida') v.estado = 'pendiente'; });
+      indiceLista = 0;
+      pintarLista();
+    });
+  });
+
+  $('#btnQuitarLista').addEventListener('click', function(){
+    if(enLista) return aviso('Primero detén la escritura de la lista.');
+    filas = []; valores = []; indiceLista = 0;
+    $('#archivoLista').value = '';
+    $('#nombreArchivo').textContent = '';
+    $('#cajaColumna').hidden = true;
+    $('#avanceLista').hidden = true;
+    guarda.poner('nfc_lista', null);
+  });
+
+  $('#btnSaltar').addEventListener('click', function(){
+    if(!valores.length) return;
+    if(indiceLista < valores.length){
+      valores[indiceLista].estado = 'omitida';
+      indiceLista++;
+    }
+    pintarLista();
+    if(enLista){
+      enLista = false;
+      if(abortoEscritura){ abortoEscritura.abort(); abortoEscritura = null; }
+      botonesEscritura(false);
+      setTimeout(escribirLista, 250);
+    }
+  });
+
+  function escribirLista(){
+    if(!valores.length) return aviso('Primero sube un archivo con los textos.');
+    var c = cuentaLista();
+    if(!c.pendientes) return aviso(c.invalidas ? 'No quedan filas válidas: revisa que las matrículas tengan 8 dígitos.' : 'Ya no quedan filas pendientes.');
+    var escritor;
+    try{ escritor = new NDEFReader(); }catch(e){ return aviso('No se pudo iniciar la escritura.'); }
+    abortoEscritura = new AbortController();
+    enLista = true;
+    botonesEscritura(true);
+    var opciones = { overwrite: $('#optSobrescribir').checked, signal: abortoEscritura.signal };
+    escuchar(escritor);
+
+    function siguiente(){
+      while(indiceLista < valores.length && valores[indiceLista].estado !== 'pendiente') indiceLista++;
+      if(indiceLista >= valores.length){
+        var f = cuentaLista();
+        enLista = false;
+        if(abortoEscritura){ abortoEscritura.abort(); abortoEscritura = null; }
+        botonesEscritura(false);
+        pintarLista();
+        vibrar([90,70,90]);
+        estado('escribir','ok','Lista terminada: '+f.grabadas+' de '+f.total+' etiquetas grabadas.');
+        return;
+      }
+      var v = valores[indiceLista];
+      estado('escribir','esperando','<strong>Acerca la etiqueta para la fila '+(indiceLista+1)+' de '+valores.length+'</strong><br>'+escapar(v.texto));
+      escritor.write({ records:[{ recordType:'text', lang:'es', encoding:'utf-8', data:v.texto }] }, opciones).then(function(){
+        v.estado = 'grabada';
+        vibrar(80);
+        anotarTag('Escritura', v.texto);
+        indiceLista++;
+        pintarLista();
+        estado('escribir','ok','Fila '+indiceLista+' grabada. Retira la etiqueta y acerca la siguiente.');
+        setTimeout(function(){ if(enLista && abortoEscritura) siguiente(); }, 1400);
+      }).catch(function(err){
+        if(err && err.name === 'AbortError') return;
+        vibrar([40,60,40]);
+        anotarTag('Error de escritura', v.texto);
+        enLista = false;
+        if(abortoEscritura){ abortoEscritura.abort(); abortoEscritura = null; }
+        botonesEscritura(false);
+        estado('escribir','error','No se pudo grabar la fila '+(indiceLista+1)+': '+(err && err.message ? err.message : 'error desconocido')+'<br>Toca Escribir la lista para reintentar esa misma fila.');
+      });
+    }
+    siguiente();
+  }
+
+  $('#btnEscribirLista').addEventListener('click', escribirLista);
+
+  function restaurarLista(){
+    var g = guarda.leer('nfc_lista');
+    if(g && g.valores && g.valores.length){
+      valores = g.valores;
+      indiceLista = g.indice || 0;
+      $('#avanceLista').hidden = false;
+      pintarLista();
+      var c = cuentaLista();
+      if(c.grabadas + c.omitidas < c.total) aviso('Se recuperó la lista anterior: '+c.grabadas+' de '+c.total+' grabadas.');
+    }
+  }
+
+  /* ===================== REGISTRO ===================== */
+  function anotar(accion, serie, resumenTxt){
+    var d = new Date();
+    movimientos.unshift({ fecha:fechaHora(d), hora:hora(d), accion:accion, serie:serie||'', resumen:resumenTxt||'' });
+    if(movimientos.length > 300) movimientos.pop();
+    guarda.poner('nfc_movimientos', movimientos);
+    pintarRegistro();
+  }
+
+  function actualizarBotonesRegistro(){
+    var lec = 0, esc = 0;
+    movimientos.forEach(function(m){
+      if(m.accion === 'Lectura') lec++; else esc++;
+    });
+    $('#btnCSVLecturas').disabled = lec === 0;
+    $('#btnCSVEscrituras').disabled = esc === 0;
+    $('#btnLimpiar').disabled = movimientos.length === 0;
+  }
+
+  function pintarRegistro(){
+    actualizarBotonesRegistro();
+    var ul = $('#listaRegistro');
+    if(!movimientos.length){
+      ul.innerHTML = '<li><p class="vacio">Todavía no hay movimientos.</p></li>';
+      $('#resumenRegistro').textContent = 'Aquí se anota cada lectura y cada escritura, con hora y número de serie.';
+      return;
+    }
+    ul.innerHTML = movimientos.map(function(m, i){
+      return '<li><div class="datos"><div class="meta"><b>'+escapar(m.accion)+'</b><span>'+escapar(m.hora)+'</span>'+
+        (m.serie ? '<span class="chip">'+escapar(m.serie)+'</span>' : '')+
+        '</div><div class="res">'+escapar(m.resumen)+'</div></div>'+
+        '<button type="button" class="quitar mini" data-borrar="'+i+'" aria-label="Eliminar este movimiento">&times;</button></li>';
+    }).join('');
+    var lecturas = movimientos.filter(function(m){ return m.accion === 'Lectura'; }).length;
+    var escrituras = movimientos.filter(function(m){ return m.accion === 'Escritura'; }).length;
+    $('#resumenRegistro').textContent = lecturas+' lectura(s) y '+escrituras+' escritura(s) en este registro.';
+  }
+
+  function descargarCSV(acciones, archivo, etiqueta){
+    var datos = movimientos.filter(function(m){ return acciones.indexOf(m.accion) >= 0; });
+    if(!datos.length) return aviso('No hay '+etiqueta+' para descargar.');
+    var q = function(v){ return '"'+String(v).split('"').join('""')+'"'; };
+    var lineas = [['Fecha y hora','Accion','Numero de serie','Contenido'].map(q).join(',')];
+    datos.forEach(function(m){
+      lineas.push([m.fecha, m.accion, m.serie, m.resumen].map(q).join(','));
+    });
+    var blob = new Blob(['\ufeff'+lineas.join('\r\n')], {type:'text/csv;charset=utf-8'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = archivo;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
+    aviso(datos.length+' movimiento(s) descargados.');
+  }
+
+  $('#listaRegistro').addEventListener('click', function(e){
+    var b = e.target.closest('[data-borrar]');
+    if(!b) return;
+    var i = parseInt(b.dataset.borrar, 10);
+    var m = movimientos[i];
+    if(!m) return;
+    pregunta('Eliminar este movimiento', m.accion+' — '+m.hora+'\n'+(m.resumen || ''), 'Eliminar', true).then(function(ok){
+      if(!ok) return;
+      var j = movimientos.indexOf(m);
+      if(j < 0) return;
+      movimientos.splice(j, 1);
+      guarda.poner('nfc_movimientos', movimientos);
+      pintarRegistro();
+      aviso('Movimiento eliminado.');
+    });
+  });
+
+  $('#btnCSVLecturas').addEventListener('click', function(){
+    descargarCSV(['Lectura'], 'lecturas_nfc.csv', 'lecturas');
+  });
+
+  $('#btnCSVEscrituras').addEventListener('click', function(){
+    descargarCSV(['Escritura','Error de escritura','Borrado','Bloqueo'], 'escrituras_nfc.csv', 'escrituras');
+  });
+
+  $('#btnLimpiar').addEventListener('click', function(){
+    if(!movimientos.length) return;
+    pregunta('Vaciar el registro', 'Se borrarán las '+movimientos.length+' anotaciones de lectura y escritura. Descarga antes los CSV si los necesitas.', 'Vaciar', true).then(function(ok){
+      if(!ok) return;
+      movimientos = [];
+      guarda.poner('nfc_movimientos', movimientos);
+      pintarRegistro();
+    });
+  });
+
+  /* ===================== ARRANQUE ===================== */
+  if('serviceWorker' in navigator && location.protocol === 'https:'){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  }
+
+  revisarSoporte();
+  restaurarFormulario();
+  restaurarLista();
+  var previos = guarda.leer('nfc_movimientos');
+  if(previos && previos.length){ movimientos = previos; }
+  pintarRegistro();
+})();
+</script>
+</body>
+</html>
